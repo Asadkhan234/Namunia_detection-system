@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+tf_env/
+.env
+
+# Model files
+fine_tuning_with_resnet.keras
+*.h5
+
+# Editor/OS files
+.vscode/
+.DS_Store
+
+# Test output
+.coverage
+htmlcov/
