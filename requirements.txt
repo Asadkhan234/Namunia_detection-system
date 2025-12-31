@@ -1,4 +1,5 @@
 ﻿streamlit
 numpy
 pillow
-tensorflow==2.15.0
+tensorflow-cpu==2.15.0
+# If tensorflow-cpu is not available for the deployment Python version, you may need to adjust this to a compatible tensorflow wheel or deploy using Docker.

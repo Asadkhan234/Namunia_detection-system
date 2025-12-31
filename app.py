@@ -1,8 +1,19 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from PIL import Image
-from tensorflow.keras.applications.resnet50 import preprocess_input
+from pathlib import Path
+
+# Try to import TensorFlow lazily and handle missing dependency gracefully
+try:
+    import tensorflow as tf
+    from tensorflow.keras.applications.resnet50 import preprocess_input
+    TF_AVAILABLE = True
+    TF_IMPORT_ERROR = None
+except Exception as e:
+    tf = None
+    preprocess_input = None
+    TF_AVAILABLE = False
+    TF_IMPORT_ERROR = str(e)
 
 # Page setup
 st.set_page_config(page_title="Pneumonia Detector", layout="centered")
@@ -11,13 +22,30 @@ st.title("🫁 Pneumonia Detection from Chest X-Ray")
 # Class labels
 class_names = ["Normal", "Pneumonia"]
 
-# Load model
+# Load model (safe)
 @st.cache_resource
 def load_model():
-    model = tf.keras.models.load_model("fine_tuning_with_resnet.keras", compile=False)
+    if not TF_AVAILABLE:
+        raise ImportError(f"TensorFlow is not available in the environment: {TF_IMPORT_ERROR}")
+    model_path = Path("fine_tuning_with_resnet.keras")
+    if not model_path.exists():
+        # Optional: if you prefer automatic download, implement logic here to fetch the model from a URL
+        raise FileNotFoundError(
+            f"Model file not found at {model_path}. Add the model to the repo, enable Git LFS, or provide a MODEL_URL to download at startup."
+        )
+    model = tf.keras.models.load_model(str(model_path), compile=False)
     return model
 
-model = load_model()
+# Try loading model and show friendly errors instead of crashing
+try:
+    model = load_model()
+except Exception as e:
+    st.error("Model could not be loaded.")
+    st.write("Troubleshooting steps:")
+    st.write("- Ensure TensorFlow is listed in `requirements.txt` and compatible with the Streamlit deployment Python version.")
+    st.write("- Ensure `fine_tuning_with_resnet.keras` is present in the repository or configure an automatic download.")
+    st.exception(e)
+    st.stop()
 
 # Automatically get model input size
 input_shape = model.input_shape  # (None, H, W, C)
